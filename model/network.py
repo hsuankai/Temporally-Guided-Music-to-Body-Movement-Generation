@@ -79,7 +79,10 @@ class Generator(nn.Module):
                     nn.init.constant_(bias.data, 0.0)
 
     def forward(self, inputs, lengths):
+        """Args: inputs N x T x D
+                 lengtgs N x T    
         
+        """
         batch_size = inputs.size(0)
         total_length = inputs.size(1)
         

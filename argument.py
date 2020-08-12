@@ -13,13 +13,14 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Body Movement Network')
     
     # global arguments
-    parser.add_argument('--data', type=str, default='../Data/all/train_mfcc.pkl', help='if true use mel-spectrogram else use mfcc as feature')
+    parser.add_argument('--train_data', type=str, default='data/train.pkl', help='training data path')
+    parser.add_argument('--test_data', type=str, default='data/test.pkl', help='test data path')
     parser.add_argument('--delay', type=int, default=0, help='time-delay')
     parser.add_argument('--epoch', type=int, default=300, help='epoch')
     parser.add_argument('--batch', type=int, default=32, help='batch_size')
     parser.add_argument('--lr', type=float, default=0.001, help='learning rate')
     parser.add_argument('--early_stop_iter', type=int, default=10, help='use early stopping scheme if > 0')
-    parser.add_argument('--checkpoint', type=str, default='checkpoint/warmup/', help='checkpoint')
+    parser.add_argument('--checkpoint', type=str, default='checkpoint/warmup.pth', help='checkpoint')
     
     # model arguments
     parser.add_argument('--d_input', type=int, default=28, help='the hidden units used in network')
@@ -35,6 +36,11 @@ def parse_args():
     parser.add_argument('--dropout', type=float, default=0.1, help='dropout rate')
     parser.add_argument('--pre_lnorm', type=bool, default=False, help='apply pre-layernormalization or not')
     parser.add_argument('--attn_type', type=str, default='rel', help='the type of self-attention') 
+    
+    # inference arguments
+    parser.add_argument('--inference_data', type=str, default='A09wind.wav', help='the path of wav file')
+    parser.add_argument('--pretrain', type=str, default='checkpoint/checkpoint081220.pth', help='checkpoint')
+    parser.add_argument('--animation_output', type=str, default='output.mp4', help='checkpoint')
     
     args = parser.parse_args()
     

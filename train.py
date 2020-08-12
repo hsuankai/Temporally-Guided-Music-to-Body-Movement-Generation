@@ -7,7 +7,6 @@ Created on Mon Jun 24 17:44:11 2019
 """
 
 import os
-import pickle
 import numpy as np
 import matplotlib
 from argument import parse_args
@@ -17,11 +16,11 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 
-from model.utils import delayArray, lambda_rule, audio_skeleton_dataset, sort_sequences
+from model.utils import delayArray, audio_skeleton_dataset, sort_sequences
 from metric import build_lossL1
 from model.network import MovementNet
 from model.optimizer import Optimizer
-
+from download import download_data
 
 torch.manual_seed(0)
 torch.cuda.manual_seed_all(0)
@@ -34,20 +33,18 @@ gpu_ids = [0]
 
 args = parse_args()
 
-if not os.path.exists(args.checkpoint):
-    os.makedirs(args.checkpoint)
+if not os.path.exists('checkpoint'):
+    os.makedirs('checkpoint')
 
+if not os.path.exists(args.train_data):
+    download_data()
 
 # Data
-train_dataset = audio_skeleton_dataset(args.data, 'train')
-val_dataset = audio_skeleton_dataset(args.data, 'val')
+train_dataset = audio_skeleton_dataset(args.train_data, 'train')
+val_dataset = audio_skeleton_dataset(args.train_data, 'val')
 
 train_loader = DataLoader(train_dataset, batch_size=args.batch, shuffle=True)
 val_loader = DataLoader(val_dataset, batch_size=args.batch, shuffle=False)
-
-with open('../Data/all/train_mfcc.pkl', 'rb') as f:
-    data = pickle.load(f)
-
 
 # Model
 movement_net = MovementNet(args.d_input, args.d_output_body, args.d_output_rh, args.d_model, args.n_block, args.n_unet, args.n_attn, args.n_head, args.max_len, args.dropout,
@@ -131,6 +128,6 @@ for e in range(args.epoch):
                 torch.save({'epoch' : e+1,
                             'model_state_dict': {'movement_net': movement_net.state_dict()},
                             'optimizer_state_dict': optimizer.state_dict(),
-                            'loss': min_val_loss}, args.checkpoint + 'mfcc.pth')
+                            'loss': min_val_loss}, args.checkpoint)
             else:
                 counter += 1

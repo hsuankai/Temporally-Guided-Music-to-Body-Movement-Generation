@@ -26,13 +26,8 @@ class audio_skeleton_dataset(Dataset):
         self.data = self.Data[split]
         self.aud = self.data['aud']
         self.keypoints = self.data['keypoints']
-        self.beat = self.data['beat']
-        self.beat = self.data['beat_onehot']
         self.seq_len = self.data['seq_len']
-        self.beat = beatlabel(self.beat, self.seq_len)
-        self.bow = self.data['bow_attack']
-        self.onset = self.data['onset']
-        
+
         self.gpu = gpu
         
     def __getitem__(self, index):
@@ -83,55 +78,3 @@ def lengths_to_tensor(lengths, max_len=265, gpu='0'):
 def lambda_rule(epoch):
     lr_l = 1.0 - max(0, epoch + 1 - 100) / float(100 + 1)
     return lr_l
-
-def beatlabel(b, length):  
-    Beats = []
-    for beats, l in zip(b, length):
-        idx = np.where(beats==1)[0]
-        '''ver2'''
-        for i in range(len(idx)):
-            x = 0
-            if i!=len(idx)-1:
-                div = math.ceil((idx[i+1] - idx[i]) / 2)
-                counter= 0
-                for j in range(idx[i],idx[i+1]):
-                    if counter==0:
-                        counter += 1
-                        continue
-                    
-                    elif counter<div:
-                        x += 1 / 30 
-                        beats[j] = np.exp(-(3 * x))
-
-                        counter += 1
-                        
-                    elif counter==div:
-                        x += 1 / 30
-                        beats[j] = np.exp(-(3 * x))
-## 
-                        counter += 1
-                    
-#                        elif counter==div+1:
-#                            x -= 1 / 20
-#                            beats[j] = np.exp(-(3 * x))
-#                            counter += 1
-                            
-                    else:
-                        x -= 1 / 30
-                        beats[j] = np.exp(-(3 * x))
-                        
-                        counter += 1
-                        
-            else:
-                counter = 0
-                for j in range(idx[i], l):
-                    if counter==0:
-                        counter += 1
-                        continue
-                    
-                    else:
-                        x += 1 / 30
-                        beats[j] = np.exp(-(3 * x))
-        Beats.append(beats)
-    Beats = np.array(Beats)
-    return Beats
