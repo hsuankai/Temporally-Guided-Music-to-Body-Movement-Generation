@@ -1,0 +1,24 @@
+##########################################################################
+This is the list of pieces including violin instrument in the URMP dataset
+##########################################################################
+01 Jupiter
+02 Sonata
+08 Spring from the Four Seasons
+09 Jesus Bleibet Meine Freude
+12 Spring from the Four Seasons
+13 Hark the herald angels sing
+17 Nocturne
+18 Nocturne
+19 Pavane
+20 Pavane
+24 Pirates of the Aegean
+25 Pirates of the Aegean
+26 In the Hall of the Mountain King
+27 In the Hall of the Mountain King
+32 The Art of the Fugue
+35 Rondeau from Abdelazer
+36 Rondeau from Abdelazer
+37 Rondeau from Abdelazer
+38 Jerusalem
+39 Jerusalem
+44 String Quintet K515
