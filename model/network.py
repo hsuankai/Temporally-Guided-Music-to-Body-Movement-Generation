@@ -13,11 +13,10 @@ import torch.nn.functional as F
 from .module import  Linear, Conv1d, Conv2d, Up, Down, DoubleConv
 from .attention import FFN_linear
 from .layers import Unet_block
-from metric import build_lossL1
 
 class HandEncoder(nn.Module):
     """
-    HandEncoder with Self-attention and Unet
+    HandEncoder with Self-attention and U-net
     """
     def __init__(self, d_input, d_model, n_block, n_unet, n_attn, n_head, max_len, dropout,
                  pre_lnorm, attn_type):
@@ -127,18 +126,6 @@ class MovementNet(nn.Module):
         full_output = torch.cat([body_output, rh_final], dim=-1)
         
         return full_output
-    
-#    def cal_loss(self, inputs, lengths, targets):
-#        
-#        full_output = self.forward(inputs, lengths)
-#        mask = targets != 0
-#        mask = mask.type('torch.FloatTensor').cuda('cuda:' + self.gpu)
-#        loss = build_lossL1(full_output, targets, mask[:, :, :1])
-#        
-#        return loss
-        
-        
-        
         
         
         

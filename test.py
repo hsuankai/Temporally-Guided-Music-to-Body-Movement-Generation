@@ -9,192 +9,130 @@ Created on Mon Jun 24 17:44:11 2019
 import os
 import pickle
 import numpy as np
-import scipy.signal
-from argument import parse_args
+from sklearn.metrics.pairwise import cosine_similarity
 
 import torch
 import torch.nn as nn
 
+from data import Download
+from argument import parse
 from metric import compute_pck, bowing_acc
 from model.network import MovementNet
-from sklearn.metrics.pairwise import cosine_similarity as cosine
+from visualize.animation import plot
 
 
-"""Options"""
-os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+parser = parse()
+parser.add_argument('--plot_path', type=str, default=None, help='plot skeleton and add audio')
+parser.add_argument('--output_path', type=str, default=None, help='save skeletal data (only for no.9 violinist)')
+args = parser.parse_args()
+
+# Device
+os.environ["CUDA_DEVICE_ORDER"] = 'PCI_BUS_ID'
 os.environ["CUDA_VISIBLE_DEVICES"] = '0'
-g = '0'
-gpu_ids = [0]
+gpu_ids = [int(i) for i in args.gpu_ids.split(',')]
 
 v_train = ['04']
 vid = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10']
-pieces = ['bachno2', 'bachno3', 'bee5', 'bee6-1', 'bee6-2',
-         'elgar', 'flower', 'mend-1', 'mend-2', 'mend-3', 'mozmvt1', 'mozmvt3-1', 'mozmvt3-2', 'wind']
+p = 'flower'
 
-if not os.path.isdir('result/body_data/'):
-    os.makedirs('result/body_data/')
-
-args = parse_args()
-
-Set_mse_std = []
-Set_mse_hand_std = []
-Set_pck_std = []
-Set_bow_std = []
-Set_cosine_std = []
-
-Set_mse = []
-Set_mse_hand = []
-Set_pck = []
-Set_bow = []
-Set_bow_std = []
-Set_bowx = []
-Set_bowy = []
-Set_bowz = []
-Set_cosine = []
-
-p = 'wind'
-
-print('testing %s ...' %p)
-
-"""Data"""
-with open('../Data/official/test_mfcc.pkl', 'rb') as f:
-    Data = pickle.load(f)
-
-body_mean, body_std = Data['keypoints_mean'], Data['keypoints_std']
-
-"""Model"""
-checkpoint = torch.load(args.checkpoint)
-movement_net = MovementNet(args.d_input, args.d_output_body, args.d_output_rh, args.d_model, args.n_block, args.n_unet, args.n_attn, args.n_head, args.max_len, args.dropout,
-                               args.pre_lnorm, args.attn_type)
-movement_net = nn.DataParallel(movement_net, device_ids=gpu_ids)
-movement_net.load_state_dict(checkpoint['model_state_dict']['movement_net'])
-movement_net = movement_net.module
-movement_net.eval()
-#------------------------ START TESTING ---------------------------------------
-result = {}
-result['Piece'] = p
-with torch.no_grad():
-    set_mse = []
-    set_mse_hand = []
-    set_pck_01 = []
-    set_pck_02 = []
-    set_bow = []
-    set_bowx = []
-    set_bowy = []
-    set_bowz = []
-    set_cosine = []
-    for v in vid:
-        result[v] = {}
-        aud = Data[p][v]['aud']
-        keypoints = Data[p][v]['keypoints']
-        sample_frame = Data[p][v]['sample_frame']
-        seq_len = aud.shape[1]
-
-        X_test = torch.tensor(aud, dtype=torch.float32).cuda('cuda:' + g)
-        y_test = torch.tensor(keypoints, dtype=torch.float32).cuda('cuda:' + g)
-        lengths = X_test.size(1)
-        lengths = torch.tensor(lengths).cuda('cuda:' + g)
-        
-#            X_test = X_test.unsqueeze(0)
-        lengths = lengths.unsqueeze(0)
-        
-        full_output = movement_net.forward(X_test, lengths)
-            
-        pred = full_output.squeeze(0)
-        pred = pred.data.cpu().numpy()
-        pred = pred[args.delay:]
-
-        targ = keypoints.squeeze(0)
-        targ = targ[args.delay:]
-
-        assert pred.shape==targ.shape
-        ''''''
-        pred = pred * body_std + body_mean
-        pred = np.reshape(pred, [len(pred), -1, 3])
-        targ = targ * body_std + body_mean
-        targ = np.reshape(targ, [len(targ), -1, 3])
-        ''''''
-        sample_time = sample_frame[int(args.delay/2):]
-        assert len(pred)==len(sample_frame)
-        sample_time = sample_time / 30
-        sample_time = [sample_time[0], sample_time[-1]]
-        
-        pred_ = pred.reshape(len(pred), -1)
-        pred_ = np.array([scipy.signal.medfilt(pred_[:, i], 5) for i in range(pred_.shape[1])], dtype='float32').transpose(1, 0).reshape(len(pred_), -1, 3)
-        pred[:, :-2] = pred_[:, :-2]
-#            pred = pred_
-        
-        result[v]['pred'] = pred
-        result[v]['targ'] = targ
-        result[v]['sample_time'] = sample_time
-
-        if v not in v_train:
-
-            piece_mse = np.mean(abs(pred - targ))
-            piece_mse_hand = np.mean(abs(pred[:, -1, :] - targ[:, -1, :]))
-            piece_pck_01 = compute_pck(pred, targ, alpha=0.1)
-            piece_pck_02 = compute_pck(pred, targ, alpha=0.2)
-            piece_bow_acc = bowing_acc(pred[:,-1,:], targ[:,-1,:], alpha=3)
-            piece_cosine = np.mean(cosine(pred[:, -1, :], targ[:, -1, :]))
-#                piece_cosine = []    
-#                piece_cosine.append(np.mean(cosine(pred[:, -1, :], targ[:, -1, :])))
-#                piece_cosine.append(np.mean(cosine(pred[:, -2, :], targ[:, -2, :])))
-#                piece_cosine = np.mean(piece_cosine)
-#                print(p + ' loss: %f' %piece_mse)
-            set_mse.append(piece_mse)
-            set_mse_hand.append(piece_mse_hand)
-            set_pck_01.append(piece_pck_01)
-            set_pck_02.append(piece_pck_02)
-            set_bowx.append(piece_bow_acc[0])
-            set_bowy.append(piece_bow_acc[1])
-            set_bowz.append(piece_bow_acc[2])
-            set_bow.append(piece_bow_acc[3])
-            set_cosine.append(piece_cosine)
-
-        torch.cuda.empty_cache()
-
-    avg_pck = (np.mean(set_pck_01) + np.mean(set_pck_02))*0.5
-    print(p + ' avg_mse_loss: %f' %np.mean(set_mse))
-    print(p + ' avg_mse_hand_loss: %f' %np.mean(set_mse_hand))
-    print(p + ' avg_pck_0.1: %f' %np.mean(set_pck_01))
-    print(p + ' avg_pck_0.2: %f' %np.mean(set_pck_02))
-    print(p + ' avg_pck: %f' %avg_pck)
-    print(p + ' avg_bowing_accx: %f' %np.mean(set_bowx))
-    print(p + ' avg_bowing_accy: %f' %np.mean(set_bowy))
-    print(p + ' avg_bowing_accz: %f' %np.mean(set_bowz))
-    print(p + ' avg_bowing_acc: %f' %np.mean(set_bow))
-    print(p + ' avg_cosine_similarity: %f' %np.mean(set_cosine))
-    Set_mse.append(np.mean(set_mse))
-    Set_mse_hand.append(np.mean(set_mse_hand))
-    Set_pck.append(avg_pck)
-    Set_bow.append(np.mean(set_bow))
-    Set_bow_std.append(np.std(set_bow))
-    Set_bowx.append(np.mean(set_bowx))
-    Set_bowy.append(np.mean(set_bowy))
-    Set_bowz.append(np.mean(set_bowz))
-    Set_cosine.append(np.mean(set_cosine))
+def main():
+    # Data
+    download_data = Download()
+    download_data.test_data()
+    with open(download_data.test_dst, 'rb') as f:
+        Data = pickle.load(f)
+    keypoints_mean, keypoints_std = Data['keypoints_mean'], Data['keypoints_std']
     
-    Set_mse_std.append(np.std(set_mse))
-    Set_mse_hand_std.append(np.std(set_mse_hand))
-    Set_pck_std.append((np.std(set_pck_01) + np.std(set_pck_02))*0.5)
-    Set_bow_std.append(np.std(set_bow))
-    Set_cosine_std.append(np.std(set_cosine))
+    # Model
+    checkpoint = torch.load(args.checkpoint)
+    movement_net = MovementNet(args.d_input, args.d_output_body, args.d_output_rh, args.d_model, args.n_block, args.n_unet, args.n_attn, args.n_head, args.max_len, args.dropout,
+                                   args.pre_lnorm, args.attn_type)
+    movement_net = nn.DataParallel(movement_net, device_ids=gpu_ids)
+    movement_net.load_state_dict(checkpoint['model_state_dict']['movement_net'])
+    movement_net = movement_net.module
+    movement_net.eval()
+    
+    #------------------------ START TESTING ----------------------------------#
+    print('Testing... \n')
+    result = {p: {}}
+    l1 = []
+    l1_hand = []
+    pck_01 = []
+    pck_02 = []
+    bow = []
+    bowx = []
+    bowy = []
+    bowz = []
+    cosine = []
+    with torch.no_grad():
+        for v in vid:
+            result[p][v] = {}
+            aud = Data[p][v]['aud']
+            keypoints = Data[p][v]['keypoints']
+            sample_frame = Data[p][v]['sample_frame']
+    
+            X_test = torch.tensor(aud, dtype=torch.float32).cuda('cuda:' + str(gpu_ids[0]))
+            lengths = X_test.size(1)
+            lengths = torch.tensor(lengths).cuda('cuda:' + str(gpu_ids[0]))
+            lengths = lengths.unsqueeze(0)
+            
+            full_output = movement_net.forward(X_test, lengths)
+                
+            pred = full_output.squeeze(0)
+            pred = pred.data.cpu().numpy()
+            targ = keypoints.squeeze(0)
+            assert pred.shape==targ.shape
+            
+            # Transform keypoints to world coordinate
+            pred = pred * keypoints_std + keypoints_mean
+            pred = np.reshape(pred, [len(pred), -1, 3])
+            targ = targ * keypoints_std + keypoints_mean
+            targ = np.reshape(targ, [len(targ), -1, 3])
+            
+            # Clip time
+            assert len(pred)==len(sample_frame)
+            sample_time = sample_frame / 30
+            sample_time = [sample_time[0], sample_time[-1]]
+            
+            result[p][v]['pred'] = pred
+            result[p][v]['targ'] = targ
+            result[p][v]['sample_time'] = sample_time
+            
+            # Evaluate test data of other 9 violinists
+            if v not in v_train:
+                v_l1 = np.mean(abs(pred - targ))
+                v_l1_hand = np.mean(abs(pred[:, -1, :] - targ[:, -1, :]))
+                v_pck_01 = compute_pck(pred, targ, alpha=0.1)
+                v_pck_02 = compute_pck(pred, targ, alpha=0.2)
+                v_bow_acc = bowing_acc(pred[:,-1,:], targ[:,-1,:], alpha=3)
+                v_cosine = np.mean(cosine_similarity(pred[:, -1, :], targ[:, -1, :]))
+    
+                l1.append(v_l1)
+                l1_hand.append(v_l1_hand)
+                pck_01.append(v_pck_01)
+                pck_02.append(v_pck_02)
+                bowx.append(v_bow_acc[0])
+                bowy.append(v_bow_acc[1])
+                bowz.append(v_bow_acc[2])
+                bow.append(v_bow_acc[3])
+                cosine.append(v_cosine)
+            torch.cuda.empty_cache()
+    
+        avg_pck = (np.mean(pck_01) + np.mean(pck_02))*0.5
+        print(p + ' Avg_L1_loss: %f' %np.mean(l1))
+        print(p + ' Avg_L1_hand_loss: %f' %np.mean(l1_hand))
+        print(p + ' Avg_Pck: %f' %avg_pck)
+        print(p + ' Avg_Bowing_Attack_accuracyX: %f' %np.mean(bowx))
+        print(p + ' Avg_Bowing_Attack_accuracyY: %f' %np.mean(bowy))
+        print(p + ' Avg_Bowing_Attack_accuracyZ: %f' %np.mean(bowz))
+        print(p + ' Avg_Bowing_Attack_accuracy: %f' %np.mean(bow))
+        print(p + ' Avg_Cosine_Similarity: %f' %np.mean(cosine))
+    
+    if args.plot_path != None:    
+        plot(download_data.wav_dst, args.plot_path, result[p]['09']['pred'], result[p]['09']['sample_time'])
+    if args.output_path != None:
+        with open(args.output_path, 'wb') as f:
+            pickle.dump(result[p]['09'], f)
 
-    with open('result/body_data/official/nowarmup.pkl', 'wb') as f:
-        pickle.dump(result, f)
-
-print('\navg_mse_loss: %f' %(np.mean(Set_mse)))
-print('avg_mse_hand_loss: %f' %(np.mean(Set_mse_hand)))
-print('avg_pck: %f' %np.mean(Set_pck))
-print('avg_bowing_accx: %f' %np.mean(Set_bowx))
-print('avg_bowing_accy: %f' %np.mean(Set_bowy))
-print('avg_bowing_accz: %f' %np.mean(Set_bowz))
-print('avg_bowing_acc: %f' %np.mean(Set_bow))
-print('avg_bowing_acc_std: %f' %np.mean(Set_bow_std))
-print('avg_cosine_similarity: %f' %np.mean(Set_cosine))
-
-print('\navg_mse_loss_std: %f' %(np.mean(Set_mse_std)*100))
-print('avg_mse_hand_loss_std: %f' %(np.mean(Set_mse_hand_std)*10))
-print('avg_pck: %f' %np.mean(Set_pck_std))
-print('avg_bowing_acc_std: %f' %np.mean(Set_bow_std))
-print('avg_cosine_similarity: %f' %np.mean(Set_cosine_std))
+if __name__ == '__main__':
+    main()

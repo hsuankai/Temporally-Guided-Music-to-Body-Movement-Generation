@@ -8,97 +8,66 @@ Created on Mon Jun 24 17:44:11 2019
 
 import os
 import pickle
-import librosa
 import numpy as np
-import scipy.signal
-from argument import parse_args
+from argument import parse
 
 import torch
 import torch.nn as nn
 
+from data import Download, preprocess
 from model.network import MovementNet
-from visualize import render_animation
-from moviepy.video.io.VideoFileClip import VideoFileClip
-from moviepy.audio.io.AudioFileClip import AudioFileClip
-from download import download_checkpoint
+from visualize.animation import plot
 
 
-def plot(audio_path, output_path, pred):
-    render_animation("", fps=30, output_path='temp.mp4', azim=75, prediction=pred, knee=True)
-    audioclip = AudioFileClip(audio_path, fps=44100)
-    videoclip = VideoFileClip('temp.mp4')
-    videoclip.audio = audioclip
-    videoclip.write_videofile(output_path, fps=30)
+parser = parse()
+parser.add_argument('--inference_audio', type=str, default='AuSep_1_vn_02_Sonata.wav', help='the path of input wav file', required=True)
+parser.add_argument('--plot_path', type=str, default='inference.mp4', help='plot skeleton and add audio')
+parser.add_argument('--output_path', type=str, default='inference.pkl', help='save skeletal data')
+args = parser.parse_args()
 
-
-"""Options"""
-os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+# Device
+os.environ["CUDA_DEVICE_ORDER"] = 'PCI_BUS_ID'
 os.environ["CUDA_VISIBLE_DEVICES"] = '0'
-g = '0'
-gpu_ids = [0]
+gpu_ids = [int(i) for i in args.gpu_ids.split(',')]
 
-
-
-args = parse_args()
-
-n_fft = 4096
-hop = 1470
-y, sr = librosa.load(args.inference_data, sr=44100)
-mfcc = librosa.feature.mfcc(y=y, sr=sr, n_fft=n_fft, hop_length=hop, n_mfcc=13)
-energy = np.log(librosa.feature.rmse(y=y, frame_length=n_fft, hop_length=hop, center=True))
-mfcc_energy = np.vstack((mfcc, energy))
-mfcc_delta = librosa.feature.delta(mfcc_energy)
-aud = np.vstack((mfcc_energy, mfcc_delta)).T
-
-
-print('inference...')
-if not os.path.exists('checkpoint'):
-    os.makedirs('checkpoint')
-if not os.path.exists(args.pretrain):
-    download_checkpoint(args.pretrain)
-
-checkpoint = torch.load(args.pretrain)
-keypoints_mean, keypoints_std = checkpoint['keypoints_mean'], checkpoint['keypoints_std']
-aud_mean, aud_std = checkpoint['aud_mean'], checkpoint['aud_std']
-aud = (aud - aud_mean) / (aud_std + 1E-8)
-
-"""Model"""
-
-movement_net = MovementNet(args.d_input, args.d_output_body, args.d_output_rh, args.d_model, args.n_block, args.n_unet, args.n_attn, args.n_head, args.max_len, args.dropout,
-                               args.pre_lnorm, args.attn_type)
-movement_net = nn.DataParallel(movement_net, device_ids=gpu_ids)
-movement_net.load_state_dict(checkpoint['model_state_dict']['movement_net'])
-movement_net = movement_net.module
-movement_net.eval()
-#------------------------ START TESTING ---------------------------------------
-result = {}
-
-with torch.no_grad():
-    seq_len = len(aud)
-
-    X_test = torch.tensor(aud, dtype=torch.float32).cuda('cuda:' + g).unsqueeze(0)
-    lengths = X_test.size(1)
-    lengths = torch.tensor(lengths).cuda('cuda:' + g)
-    lengths = lengths.unsqueeze(0)
+def main():
+    # Load pretrain model
+    download_data = Download()
+    download_data.pretrain_model()
+    checkpoint = torch.load(download_data.pretrain_model_dst)
+    keypoints_mean, keypoints_std = checkpoint['keypoints_mean'], checkpoint['keypoints_std']
+    aud_mean, aud_std = checkpoint['aud_mean'], checkpoint['aud_std']
     
-    full_output = movement_net.forward(X_test, lengths)
+    # Audio pre-processing
+    aud = preprocess(args.inference_audio, aud_mean, aud_std)
+    
+    # Model
+    movement_net = MovementNet(args.d_input, args.d_output_body, args.d_output_rh, args.d_model, args.n_block, args.n_unet, args.n_attn, args.n_head, args.max_len, args.dropout,
+                                   args.pre_lnorm, args.attn_type)
+    movement_net = nn.DataParallel(movement_net, device_ids=gpu_ids)
+    movement_net.load_state_dict(checkpoint['model_state_dict']['movement_net'])
+    movement_net = movement_net.module
+    movement_net.eval()
+    
+    with torch.no_grad():
+        print('inference...')
+        X_test = torch.tensor(aud, dtype=torch.float32).cuda('cuda:' + str(gpu_ids[0])).unsqueeze(0)
+        lengths = X_test.size(1)
+        lengths = torch.tensor(lengths).cuda('cuda:' + str(gpu_ids[0]))
+        lengths = lengths.unsqueeze(0)
         
-    pred = full_output.squeeze(0)
-    pred = pred.data.cpu().numpy()
-    pred = pred[args.delay:]
-
-    ''''''
-    pred = pred * keypoints_std + keypoints_mean
-    pred = np.reshape(pred, [len(pred), -1, 3])
-    ''''''
+        full_output = movement_net.forward(X_test, lengths)
+            
+        pred = full_output.squeeze(0)
+        pred = pred.data.cpu().numpy()
     
-    pred_ = pred.reshape(len(pred), -1)
-    pred_ = np.array([scipy.signal.medfilt(pred_[:, i], 5) for i in range(pred_.shape[1])], dtype='float32').transpose(1, 0).reshape(len(pred_), -1, 3)
-    pred[:, :-2] = pred_[:, :-2]
+        # Transform keypoints to world coordinate
+        pred = pred * keypoints_std + keypoints_mean
+        pred = np.reshape(pred, [len(pred), -1, 3])
+      
+    plot(args.inference_audio, args.plot_path, pred)
+    with open(args.output_path, 'wb') as f:
+        pickle.dump(pred, f)
 
-    torch.cuda.empty_cache()
-
-plot(args.inference_data, args.animation_output, pred)
-
-
-
+if __name__ == '__main__':
+    main()
