@@ -100,6 +100,4 @@ class Unet_block(nn.Module):
             x = up(x, skip[-(i+1)])
             
         x = x.transpose(1,2)
-        
-        
         return x

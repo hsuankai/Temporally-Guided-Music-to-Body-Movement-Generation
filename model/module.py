@@ -53,7 +53,6 @@ class Conv1d(nn.Module):
             nn.init.constant_(self.conv.bias, 0.0)
 
     def forward(self, x):
-        x = self.conv(x)
         return self.conv(x)
 
 class DoubleConv(nn.Module):
@@ -113,5 +112,4 @@ class Up(nn.Module):
         x1 = F.interpolate(x1, size=x2.size(2), mode='linear', align_corners=False)
         x = torch.cat([x2, x1], dim=1)
         x = self.conv(x)
-
         return x

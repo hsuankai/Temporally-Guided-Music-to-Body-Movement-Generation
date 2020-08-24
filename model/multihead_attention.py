@@ -43,7 +43,6 @@ class GlobalMultiheadAttention(nn.Module):
 
          # Get Context Vector
          output = torch.bmm(attn, value)
-
          return output, attn
 
 class RelMultiheadAttention(nn.Module):
@@ -83,7 +82,6 @@ class RelMultiheadAttention(nn.Module):
 
          # Get Context Vector
          output = torch.bmm(attn, value)
-
          return output, attn
 
 
@@ -98,7 +96,7 @@ class RelativeAttention(nn.Module):
                  add_bias_to_query_for_relative_logits=True,  # the d term in transformer-xl(second equation in page 5)
                  add_bias_to_query_for_key_logit=True,  # the c term in transformer-xl(second equation in page 5)
                  use_custom_cuda_kernel=True):
-        super(RelativeAttention).__init__()
+        super(RelativeAttention, self).__init__()
         assert model_depth % num_heads == 0
         assert 1 <= n_dim <= 3
         self.use_custom_cuda_kernel = use_custom_cuda_kernel

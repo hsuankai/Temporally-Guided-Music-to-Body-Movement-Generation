@@ -13,21 +13,20 @@ from model.network import MovementNet
 from visualize.animation import plot
 
 
-parser = parse()
-parser.add_argument('--plot_path', type=str, default='test_axisoff.mp4', help='plot skeleton and add audio')
-parser.add_argument('--output_path', type=str, default=None, help='save skeletal data (only for no.9 violinist)')
-args = parser.parse_args()
-
-# Device
 os.environ["CUDA_DEVICE_ORDER"] = 'PCI_BUS_ID'
-os.environ["CUDA_VISIBLE_DEVICES"] = '0'
-gpu_ids = [int(i) for i in args.gpu_ids.split(',')]
-
-v_train = ['04']
-vid = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10']
-p = 'flower'
 
 def main():
+    v_train = ['04'] # Training data only include No.4 violinist
+    vid = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10']
+    p = 'flower' # test piece
+    
+    # Parser
+    parser = parse()
+    parser.add_argument('--plot_path', type=str, default='test_axisoff.mp4', help='plot skeleton and add audio')
+    parser.add_argument('--output_path', type=str, default=None, help='save skeletal data (only for no.9 violinist)')
+    args = parser.parse_args()
+    gpu_ids = [int(i) for i in args.gpu_ids.split(',')]
+    
     # Data
     download_data = Download()
     download_data.test_data()

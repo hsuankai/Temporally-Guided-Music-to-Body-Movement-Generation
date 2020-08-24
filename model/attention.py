@@ -83,7 +83,6 @@ class Self_attention(nn.Module):
          # Layer normalization
          if not self.pre_lnorm:
              output = self.layer_norm(output)
-
          return output, attns
 
 
@@ -118,5 +117,4 @@ class FFN_linear(nn.Module):
 
             # residual connection + layer normalization
             output = self.layer_norm(output + residual)
-
         return output
