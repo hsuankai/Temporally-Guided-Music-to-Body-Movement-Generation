@@ -1,11 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Mar 23 19:19:51 2020
-
-@author: gaussian
-"""
-
 import math
 from enum import Enum
 
@@ -15,11 +7,11 @@ import torch.nn.functional as F
 
 
 class PositionalEncoding(nn.Module):
-    """Implement the absolute positional encoding (PE) function.
+    """
+    Implement the absolute positional encoding (PE) function.
     PE(pos, 2i)   = sin(pos/(10000^(2i/dmodel)))
     PE(pos, 2i+1) = cos(pos/(10000^(2i/dmodel)))
     """
-
     def __init__(self, d_model, max_len=14000):
         super(PositionalEncoding, self).__init__()
         # Compute the positional encodings once in log space.
@@ -35,7 +27,7 @@ class PositionalEncoding(nn.Module):
     def forward(self, input):
         """
         Args:
-            input: N x T x D
+            input: (N, T, D)
         """
         length = input.size(1)
         return self.pe[:, :length]

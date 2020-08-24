@@ -1,27 +1,17 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sun Nov  3 17:49:28 2019
-
-@author: shiuan
-"""
-
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from .module import Conv1d, Linear
+
+from .module import Linear
 from .multihead_attention import GlobalMultiheadAttention, RelMultiheadAttention
+
 
 class Self_attention(nn.Module):
      """
-     Global Attention
+     This is the implementation of self-attention mechanism proposed in Attention Is All You Need [https://arxiv.org/abs/1706.03762], and
+     we add implementation of relative attention proposed in Music Transformer [https://magenta.tensorflow.org/music-transformer]
      """
      def __init__(self, d_model, n_head, max_len, dropout, pre_lnorm=False, attn_type='rel'):
-         """
-         :param num_hidden: dimension of hidden
-         :param h: num of heads
-         """
          super(Self_attention, self).__init__()
-
          self.d_model = d_model
          self.d_q = d_model // n_head
          self.d_k = d_model // n_head
@@ -34,9 +24,9 @@ class Self_attention(nn.Module):
          self.value = Linear(d_model, self.d_v * n_head, bias=False)
 
          if attn_type=='abs':
-             self.multihead = GlobalMultiheadAttention(self.d_k)
+             self.multihead = GlobalMultiheadAttention(self.d_k, dropout)
          elif attn_type=='rel':
-             self.multihead = RelMultiheadAttention(self.d_k, n_head, max_len)
+             self.multihead = RelMultiheadAttention(self.d_k, n_head, max_len, dropout)
 
          self.residual_dropout = nn.Dropout(p=dropout)
 
@@ -45,7 +35,6 @@ class Self_attention(nn.Module):
          self.layer_norm = nn.LayerNorm(d_model)
 
      def forward(self, memory, decoder_input, mask=None, query_mask=None):
-
          batch_size = memory.size(0)
          seq_k = memory.size(1)
          seq_q = decoder_input.size(1)
@@ -68,9 +57,7 @@ class Self_attention(nn.Module):
          key = self.key(memory).view(batch_size, seq_k, self.n_head, self.d_k)
          value = self.value(memory).view(batch_size, seq_k, self.n_head, self.d_v)
 
-#         query = query.permute(0, 2, 1, 3).contiguous().view(-1, seq_q, self.d_q)
-#         key = key.permute(0, 2, 1, 3).contiguous().view(-1, seq_k, self.d_k)
-         query = query.permute(0, 2, 1, 3).contiguous() # bz x h x qlen x dq (32, 4, 313, 64)
+         query = query.permute(0, 2, 1, 3).contiguous() # bz x h x qlen x dq
          key = key.permute(0, 2, 1, 3).contiguous() # bz x h, klen x dk
          value = value.permute(0, 2, 1, 3).contiguous().view(-1, seq_k, self.d_v) # h x bz, qlen, dv
 
@@ -104,10 +91,8 @@ class FFN_linear(nn.Module):
     """
     Positionwise Feed-Forward Network
     """
-
     def __init__(self, d_model, dropout, pre_lnorm=False, layer_norm_epsilon=1e-5):
         super(FFN_linear, self).__init__()
-
         self.FFN = nn.Sequential(
             nn.Linear(d_model, d_model*4),
             nn.ReLU(inplace=True),

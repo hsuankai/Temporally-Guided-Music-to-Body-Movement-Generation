@@ -1,34 +1,22 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Mar 23 20:27:18 2020
-
-@author: hsuankai
-"""
-
-import string
 import math
+import string
 import numpy as np
 
 import torch
 import torch.nn as nn
 from .positional_embedding import DistanceEmbedding, PositionEmbeddingType, KeyStartPosition, EmbeddingPaddingMode
 
+
 class GlobalMultiheadAttention(nn.Module):
      """
      Global Multihead Attention
      """
-     def __init__(self, d_k):
-         """
-         :param num_hidden_k: dimension of hidden
-         """
+     def __init__(self, d_k, dropout):
          super(GlobalMultiheadAttention, self).__init__()
-
          self.d_k = d_k
-         self.attn_dropout = nn.Dropout(p=0.1)
+         self.attn_dropout = nn.Dropout(p=dropout)
          
      def forward(self, query, key, value, mask=None, query_mask=None):
-         
          bz, h, seq_q, d_q = query.size()
          bz, h, seq_k, d_k = key.size()
          
@@ -61,26 +49,20 @@ class GlobalMultiheadAttention(nn.Module):
 class RelMultiheadAttention(nn.Module):
      """
      Relative Multihead Attention
-     This code is a revision version from https://github.com/Separius/CudaRelativeAttention/blob/master/relative_attention.py
+     This code is a modified version from https://github.com/Separius/CudaRelativeAttention/blob/master/relative_attention.py
      """
-     def __init__(self, d_k, n_head, max_len):
-         """
-         :param num_hidden_k: dimension of hidden
-         """
+     def __init__(self, d_k, n_head, max_len, dropout):
          super(RelMultiheadAttention, self).__init__()
-         
          self.rel_attn = RelativeAttention1d(n_head, d_k * n_head, max_len, heads_share_relative_embeddings=True, 
                                              embedding_padding_modes=EmbeddingPaddingMode.Extend,
                                              position_embedding_types=PositionEmbeddingType.Hybrid,
                                              key_start_positions=KeyStartPosition.BeforeQuery, 
                                              add_bias_to_query_for_relative_logits=True,
                                              add_bias_to_query_for_key_logit=True)
-         
          self.d_k = d_k
-         self.attn_dropout = nn.Dropout(p=0.15)
+         self.attn_dropout = nn.Dropout(p=dropout)
          
-     def forward(self, query, key, value, mask=None, query_mask=None):
-         
+     def forward(self, query, key, value, mask=None, query_mask=None):   
          # Get attention score
          attn = self.rel_attn(query, key)
          attn = attn / math.sqrt(self.d_k)
@@ -116,7 +98,7 @@ class RelativeAttention(nn.Module):
                  add_bias_to_query_for_relative_logits=True,  # the d term in transformer-xl(second equation in page 5)
                  add_bias_to_query_for_key_logit=True,  # the c term in transformer-xl(second equation in page 5)
                  use_custom_cuda_kernel=True):
-        super().__init__()
+        super(RelativeAttention).__init__()
         assert model_depth % num_heads == 0
         assert 1 <= n_dim <= 3
         self.use_custom_cuda_kernel = use_custom_cuda_kernel

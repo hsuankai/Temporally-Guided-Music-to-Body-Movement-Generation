@@ -1,11 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Jun 24 17:44:11 2019
-
-@author: gaussian
-"""
-
 import os
 import pickle
 import numpy as np

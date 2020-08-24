@@ -1,18 +1,10 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Jul 31 13:33:59 2020
-
-@author: gaussian
-"""
-
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
-from .module import  Linear, Conv1d, Conv2d, Up, Down, DoubleConv
+from .module import  Linear
 from .attention import FFN_linear
 from .layers import Unet_block
+
 
 class HandEncoder(nn.Module):
     """
@@ -21,21 +13,11 @@ class HandEncoder(nn.Module):
     def __init__(self, d_input, d_model, n_block, n_unet, n_attn, n_head, max_len, dropout,
                  pre_lnorm, attn_type):
         super(HandEncoder, self).__init__()
-
         self.linear = Linear(d_input, d_model)
         self.unet = nn.ModuleList([Unet_block(d_model, n_unet, n_attn, n_head, max_len, dropout, pre_lnorm, attn_type)] * n_block)
         self.ffn = FFN_linear(d_model, dropout)
              
     def forward(self, enc_input, lengths, return_attns=False):
-        """
-        Args:
-            enc_input: B x T x D
-            lengths: T
-
-        Returns:
-            enc_output: N x T x H
-        """
-        
         x = self.linear(enc_input)
         for unet in self.unet:
             x = unet(x, lengths, return_attns)      
@@ -45,11 +27,10 @@ class HandEncoder(nn.Module):
         
 class Generator(nn.Module):
     """
-    RNN Generator
+    LSTM Generator
     """
     def __init__(self, input_dim, hidden_dim, output_dim, dropout):
-        super(Generator, self).__init__()
-        
+        super(Generator, self).__init__()       
         self.output_dim = output_dim
         
         # Trainable h & c
@@ -78,10 +59,6 @@ class Generator(nn.Module):
                     nn.init.constant_(bias.data, 0.0)
 
     def forward(self, inputs, lengths):
-        """Args: inputs N x T x D
-                 lengtgs N x T    
-        
-        """
         batch_size = inputs.size(0)
         total_length = inputs.size(1)
         
@@ -100,22 +77,28 @@ class Generator(nn.Module):
 
 class MovementNet(nn.Module):
     """
-    Full body movement network
+    Full Body Movement Network
     """
     def __init__(self, d_input, d_output_body, d_output_rh, d_model, n_block, n_unet, n_attn, n_head,  max_len, dropout, 
                  pre_layernorm=False, attn_type='rel', gpu='0'):
         super(MovementNet, self).__init__()
-        
         self.gpu = gpu
         
         self.bodynet = Generator(d_input, d_model, d_output_body, dropout)
         self.handencoder = HandEncoder(d_input, d_model, n_block, n_unet, n_attn, n_head, max_len, dropout, 
-                               pre_layernorm, attn_type)
+                                       pre_layernorm, attn_type)
         self.handdecoder = Generator(d_model, d_model, d_output_rh, dropout)
         self.refine_network = Linear(d_model, 3)
          
     def forward(self, inputs, lengths, return_attns=False):
-        
+        """
+        Args: 
+            inputs: [B, T, D]
+            lengths: [B]  
+            
+        Returns:
+            output: [B, T, (K*3)]
+        """
         body_output = self.bodynet(inputs, lengths)
         
         enc_output = self.handencoder.forward(inputs, lengths, return_attns=return_attns)

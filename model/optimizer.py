@@ -1,8 +1,7 @@
-
-
 class Optimizer(object):
-    """A simple wrapper class for learning rate scheduling"""
-
+    """
+    A simple wrapper class for learning rate scheduling
+    """
     def __init__(self, optimizer, k, d_model, warmup_steps=500):
         self.optimizer = optimizer
         self.k = k

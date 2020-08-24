@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sun Nov  3 17:49:28 2019
-
-@author: shiuan
-"""
-
 import torch
 import torch.nn as nn
 
@@ -16,11 +9,10 @@ from .utils import lengths_to_tensor
     
 class AttentionNetwork(nn.Module):
     """
-    Global/Rel attention network
+    Global/Relative attention network with positionwise feed-forward network
     """
     def __init__(self, d_model, n_attn, n_head, max_len, dropout, pre_lnorm=False, attn_type='rel'):
         super(AttentionNetwork, self).__init__()
-        
         self.attn_type = attn_type
         
         # Absolute positional embedding
@@ -36,14 +28,13 @@ class AttentionNetwork(nn.Module):
         self.pos_ffn = [FFN_linear(d_model, dropout, pre_lnorm)] * n_attn
         self.pos_ffn = nn.Sequential(*self.pos_ffn)
         
-    def forward(self, x, enc_pos, return_attns=False):
-        
-        c_mask = enc_pos.ne(0).type(torch.float)
-        mask = enc_pos.eq(0).unsqueeze(1).repeat(1, x.size(1), 1)
+    def forward(self, x, x_pos, return_attns=False):    
+        c_mask = x_pos.ne(0).type(torch.float)
+        mask = x_pos.eq(0).unsqueeze(1).repeat(1, x.size(1), 1)
         
         if self.attn_type=='abs':
             # Get positional embedding, apply alpha and add
-            pos = self.pos_emb(enc_pos)
+            pos = self.pos_emb(x_pos)
             x = pos * self.alpha + x
             x = self.pos_dropout(x)
         
@@ -64,11 +55,20 @@ class AttentionNetwork(nn.Module):
 
 class Unet_block(nn.Module):
     """
-    Unet block including self-attention mechanism
+    U-net block including attention network
     """
     def __init__(self, d_model, n_unet, n_attn, n_head, max_len, dropout, pre_lnorm, attn_type):
         super(Unet_block, self).__init__()
-             
+        """
+        Args:
+             d_model: dimension of input
+             n_head: number of head
+             max_len: the max length of input sequence
+             dropout: dropout rate
+             pre_lnorm: use pre-layer normalization or not
+             attn_type: use global attention or relative attention
+            
+        """             
         self.max_len = max_len
         self.n_attn = n_attn
         
@@ -77,7 +77,6 @@ class Unet_block(nn.Module):
         self.attn_net = AttentionNetwork(d_model, n_attn, n_head, max_len, dropout, pre_lnorm, attn_type)
         
     def forward(self, x, lengths, return_attns):
-        
         # Down stream
         x = x.transpose(1,2)
         skip = [x]
@@ -86,7 +85,7 @@ class Unet_block(nn.Module):
             if i != len(self.down) - 1:
                 skip.append(x)
         
-        # Self attention
+        # Self-attention
         if self.n_attn > 1:
             x = x.transpose(1,2)
             x_pos = lengths_to_tensor(lengths, max_len=self.max_len)[:, :x.size(1)] # lengths to matrix

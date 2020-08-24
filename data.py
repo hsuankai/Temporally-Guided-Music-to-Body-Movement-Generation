@@ -1,11 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Aug 17 18:38:15 2020
-
-@author: gaussian
-"""
-
 import os
 import gdown
 import pickle
@@ -49,9 +41,9 @@ class Download():
 
 class audio_skeleton_dataset(Dataset):
     """
-    aud: MFCC feature, size [N, T, D]
-    keypoints: skeleton feature, size [N, T, (B*3)]
-    seq_len: length of each sequence, size [N] 
+        aud: MFCC feature, size [N, T, D]
+        keypoints: skeleton feature, size [N, T, (K*3)]
+        seq_len: length of each sequence, size [N] 
     """
     def __init__(self, root, split, gpu_id='0'):
         with open(root, 'rb') as f:
@@ -79,6 +71,7 @@ class audio_skeleton_dataset(Dataset):
         return len(self.aud)
 
 def preprocess(audio, aud_mean, aud_std):
+    """ Extract MFCC feature """
     n_fft = 4096
     hop = 1470
     y, sr = librosa.load(audio, sr=44100)

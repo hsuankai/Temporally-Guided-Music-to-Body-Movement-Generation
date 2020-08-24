@@ -62,7 +62,7 @@ def render_animation(p, fps, output_path, azim, prediction, ground_truth=None, k
         joints_right = [1, 2, 12, 13, 14]
 
 
-    prediction[:, :, 2] += 0.3
+    prediction[:, :, 2] += 0.5
     if ground_truth is not None:
         ground_truth[:, :, 2] += 0.3
         poses = {'Prediction': prediction,
@@ -89,8 +89,9 @@ def render_animation(p, fps, output_path, azim, prediction, ground_truth=None, k
         ax.set_yticklabels([])
         ax.set_zticklabels([])
         ax.dist = 7.5
-        ax.set_title(title) #, pad=35
+#        ax.set_title(title) #, pad=35
         ax.grid(False)
+        ax.axis('off')
         ax_3d.append(ax)
         lines_3d.append([])
         trajectories.append(data[:, 0, [0, 1]])
@@ -111,19 +112,10 @@ def render_animation(p, fps, output_path, azim, prediction, ground_truth=None, k
     for idx in range(len(poses)):
         poses[idx] = poses[idx][input_video_skip:]
 
-#    if fps is None:
-#        fps = get_fps(input_video_path)
-
-
     initialized = False
     image = None
     lines = []
     points = None
-
-#    if limit < 1:
-#        limit = len(all_frames)
-#    else:
-#        limit = min(limit, len(all_frames))
 
 
     def update_video(i):

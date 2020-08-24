@@ -1,11 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Jun 24 17:44:11 2019
-
-@author: gaussian
-"""
-
 import os
 import pickle
 import numpy as np
@@ -22,7 +14,7 @@ from visualize.animation import plot
 
 
 parser = parse()
-parser.add_argument('--plot_path', type=str, default=None, help='plot skeleton and add audio')
+parser.add_argument('--plot_path', type=str, default='test_axisoff.mp4', help='plot skeleton and add audio')
 parser.add_argument('--output_path', type=str, default=None, help='save skeletal data (only for no.9 violinist)')
 args = parser.parse_args()
 
@@ -104,7 +96,7 @@ def main():
                 v_l1_hand = np.mean(abs(pred[:, -1, :] - targ[:, -1, :]))
                 v_pck_01 = compute_pck(pred, targ, alpha=0.1)
                 v_pck_02 = compute_pck(pred, targ, alpha=0.2)
-                v_bow_acc = bowing_acc(pred[:,-1,:], targ[:,-1,:], alpha=3)
+                v_bow_acc = bowing_acc(pred[:,-1,:], targ[:,-1,:], alpha=3) # only take right-hand wrist keypoints to calculate bowing attack accuracy
                 v_cosine = np.mean(cosine_similarity(pred[:, -1, :], targ[:, -1, :]))
     
                 l1.append(v_l1)
