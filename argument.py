@@ -26,5 +26,4 @@ def parse():
     parser.add_argument('--dropout', type=float, default=0.1, help='dropout rate')
     parser.add_argument('--pre_lnorm', type=bool, default=False, help='applying pre-layer normalization or not')
     parser.add_argument('--attn_type', type=str, default='rel', help='the type of self-attention') 
-    
     return parser

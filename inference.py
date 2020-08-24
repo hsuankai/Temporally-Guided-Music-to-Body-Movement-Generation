@@ -11,18 +11,17 @@ from model.network import MovementNet
 from visualize.animation import plot
 
 
-parser = parse()
-parser.add_argument('--inference_audio', type=str, default='AuSep_1_vn_02_Sonata.wav', help='the path of input wav file', required=True)
-parser.add_argument('--plot_path', type=str, default='inference.mp4', help='plot skeleton and add audio')
-parser.add_argument('--output_path', type=str, default='inference.pkl', help='save skeletal data')
-args = parser.parse_args()
-
-# Device
 os.environ["CUDA_DEVICE_ORDER"] = 'PCI_BUS_ID'
-os.environ["CUDA_VISIBLE_DEVICES"] = '0'
-gpu_ids = [int(i) for i in args.gpu_ids.split(',')]
 
 def main():
+    # Parser
+    parser = parse()
+    parser.add_argument('--inference_audio', type=str, default='AuSep_1_vn_02_Sonata.wav', help='the path of input wav file', required=True)
+    parser.add_argument('--plot_path', type=str, default='inference.mp4', help='plot skeleton and add audio')
+    parser.add_argument('--output_path', type=str, default='inference.pkl', help='save skeletal data')
+    args = parser.parse_args()
+    gpu_ids = [int(i) for i in args.gpu_ids.split(',')]
+    
     # Load pretrain model
     download_data = Download()
     download_data.pretrain_model()

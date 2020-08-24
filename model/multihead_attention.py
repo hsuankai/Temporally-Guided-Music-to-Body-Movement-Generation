@@ -43,7 +43,6 @@ class GlobalMultiheadAttention(nn.Module):
 
          # Get Context Vector
          output = torch.bmm(attn, value)
-
          return output, attn
 
 class RelMultiheadAttention(nn.Module):
@@ -83,7 +82,6 @@ class RelMultiheadAttention(nn.Module):
 
          # Get Context Vector
          output = torch.bmm(attn, value)
-
          return output, attn
 
 

@@ -22,7 +22,6 @@ class HandEncoder(nn.Module):
         for unet in self.unet:
             x = unet(x, lengths, return_attns)      
         enc_output = self.ffn(x)
-
         return enc_output
         
 class Generator(nn.Module):
@@ -72,7 +71,6 @@ class Generator(nn.Module):
         output = self.dropout(output)
         output = self.fc(output)
         output = output.view(-1, total_length, self.output_dim)
-
         return output
 
 class MovementNet(nn.Module):
@@ -107,7 +105,6 @@ class MovementNet(nn.Module):
         rh_refined = rh_output[:, :, -3:] + rh_refined
         rh_final = torch.cat([rh_output[:, :, :-3], rh_refined], dim=-1)
         full_output = torch.cat([body_output, rh_final], dim=-1)
-        
         return full_output
         
         
