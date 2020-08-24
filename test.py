@@ -22,8 +22,8 @@ def main():
     
     # Parser
     parser = parse()
-    parser.add_argument('--plot_path', type=str, default='test_axisoff.mp4', help='plot skeleton and add audio')
-    parser.add_argument('--output_path', type=str, default=None, help='save skeletal data (only for no.9 violinist)')
+    parser.add_argument('--plot_path', type=str, default='test.mp4', help='plot skeleton and add audio')
+    parser.add_argument('--output_path', type=str, default='test.pkl', help='save skeletal data (only for no.9 violinist)')
     args = parser.parse_args()
     gpu_ids = [int(i) for i in args.gpu_ids.split(',')]
     

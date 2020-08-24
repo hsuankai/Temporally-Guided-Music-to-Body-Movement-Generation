@@ -14,7 +14,7 @@ from .common.custom_dataset import CustomDataset
 from .common.visualization import get_resolution, get_fps, read_video
 
 def plot(audio_path, plot_path, prediction, sample_time=None, fps=30):
-    render_animation(fps, output='temp.mp4', azim=75, prediction)
+    render_animation(fps, output='temp.mp4', azim=75, prediction=prediction)
     if sample_time != None:    
         audioclip = AudioFileClip(audio_path, fps=44100).subclip(sample_time[0], sample_time[1])
     else:
