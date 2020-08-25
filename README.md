@@ -11,15 +11,17 @@ This project is part of the [Automatic Music Concert Animation (AMCA)](https://s
 To get started as quickly as possible, follow the instructions in this section. This should allow you train a model from scratch and inference your own violin music.
 
 ### Data
-In the paper, we use 14-fold cross validation for 14 musical pieces in evaluation. However, to test model performance for simplicity, we only provide one fold for trainging data and test data, and all data are already preprocessed in feature level. You can download **train.pkl** and **test.pkl** automatically by executing **train.py** and **test.py** or use **data.py**.
+In the paper, we use 14-fold cross validation for 14 musical pieces in evaluation. However, to test model performance for simplicity, we here only provide trainging data and test data for one fold, and all data are already preprocessed in feature level. You can download **train.pkl** and **test.pkl** automatically by executing **train.py** and **test.py** or use **data.py**.
 
 ### Training from scratch
 If you want to reproduce the results, run following commands:
 ```
 python train.py 
-python test.py
+python test.py --plot_path xxx.mp4 --output_path xxx.pkl
 ```
-This will automatically download the data used in the paper and train a new model.
+- `plot_path` can make video of predicted playing movement, and we specify one of violinist for visualization.
+- `output_path` output predicted keypoints data, which consists of three axes of 15 keypoints
+
 ### Inference in the wild
 If you want to generate skeleton data and plot animation by custom audio data, you can run following commands:
 ```
