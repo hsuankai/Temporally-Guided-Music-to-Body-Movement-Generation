@@ -19,11 +19,12 @@ If you want to reproduce the results, run following commands:
 python train.py 
 python test.py --plot_path xxx.mp4 --output_path xxx.pkl
 ```
-- `plot_path` can make video of predicted playing movement, and we specify one of violinist for visualization.
-- `output_path` output predicted keypoints data, which consists of three axes of 15 keypoints
+- `--plot_path` can make video of predicted playing movement. We here specify one of violinist for visualization.
+- `--output_path` generate predicted keypoints, which consists of three axes of 15 keypoints.
 
 ### Inference in the wild
-If you want to generate skeleton data and plot animation by custom audio data, you can run following commands:
+If you want to make video and get predicted keypoints by your custom audio data, you can run following commands:
 ```
-python inference.py --inference_data test.wav --animation_output test.mp4
+python inference.py --inference_audio xxx.wav --plot_path xxx.mp4 --output_path xxx.pkl
 ```
+`--plot_path` and `--output_path` are the same as described in **test.py**, and you need to put the path of your violin music in argument `--inference_audio`.
