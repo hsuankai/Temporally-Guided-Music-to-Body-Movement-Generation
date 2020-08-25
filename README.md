@@ -23,7 +23,7 @@ python test.py --plot_path xxx.mp4 --output_path xxx.pkl
 - `--output_path` generate predicted keypoints, which consists of three axes of 15 keypoints.
 
 ### Inference in the wild
-If you want to make video and get predicted keypoints by your custom audio data, you can run following commands:
+If you want to make video and get predicted keypoints for custom audio data, you can run following commands:
 ```
 python inference.py --inference_audio xxx.wav --plot_path xxx.mp4 --output_path xxx.pkl
 ```
