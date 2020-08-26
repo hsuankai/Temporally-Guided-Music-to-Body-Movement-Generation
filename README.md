@@ -27,7 +27,7 @@ python test.py --plot_path xxx.mp4 --output_path xxx.pkl
 ```
 If you have problem with limited gpu memory usage, try to decrease `--d_model` or use multi-gpu `--gpu_ids 0,1,2`.
 - `--plot_path` make video of predicted playing movement. We here specify one of violinist for visualization.
-- `--output_path` save predicted keypoints and ground truth, whose dimensions is N x K x C, where N is the number of frames, K is the number of keypoints and C is three axes.
+- `--output_path` save predicted keypoints and ground truth, whose dimensions is N x K x C, where N is the number of frames, K is the number of keypoints and C is three axes x, y and z.
 
 ### Inference in the wild
 If you want to make video and get predicted keypoints for custom audio data by pretrained model, run following commands:
