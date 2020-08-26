@@ -5,11 +5,11 @@ def parse():
     parser = argparse.ArgumentParser(description='Body Movement Network')
     
     # Global arguments
-    parser.add_argument('--epoch', type=int, default=300, help='epoch')
+    parser.add_argument('--epoch', type=int, default=200, help='epoch')
     parser.add_argument('--batch', type=int, default=32, help='batch size')
     parser.add_argument('--lr', type=float, default=0.001, help='learning rate')
     parser.add_argument('--early_stop_iter', type=int, default=10, help='use early stopping scheme if > 0')
-    parser.add_argument('--checkpoint', type=str, default='checkpoint/all/best.pth', help='the path of checkpoint')
+    parser.add_argument('--checkpoint', type=str, default='checkpoint/best.pth', help='the path of checkpoint')
     parser.add_argument('--gpu_ids', type=str, default='0', help='specify gpu ids, you can also use multi-gpu, e.g. 0,1,2') 
     
     # Model arguments

@@ -24,11 +24,7 @@ def main():
     # Device
     os.environ["CUDA_DEVICE_ORDER"] = 'PCI_BUS_ID'
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu_ids
-<<<<<<< HEAD
     gpu_ids = [i for i in range(len(args.gpu_ids.split(',')))]
-=======
-    gpu_ids = np.arange(len(args.gpu_ids.split(',')))
->>>>>>> refs/remotes/origin/master
     
     # Load pretrain model
     download_data = Download()

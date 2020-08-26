@@ -21,14 +21,6 @@ torch.cuda.manual_seed_all(0)
 def main():
     parser = parse()
     args = parser.parse_args()
-<<<<<<< HEAD
-=======
-    
-    # device
-    os.environ["CUDA_DEVICE_ORDER"] = 'PCI_BUS_ID'
-    os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu_ids
-    gpu_ids = np.arange(len(args.gpu_ids.split(',')))
->>>>>>> refs/remotes/origin/master
     
     # Device
     os.environ["CUDA_DEVICE_ORDER"] = 'PCI_BUS_ID'
