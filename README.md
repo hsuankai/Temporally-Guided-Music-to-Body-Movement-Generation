@@ -19,6 +19,8 @@ To get started as quickly as possible, follow the instructions in this section. 
 ### Data
 In the paper, we use 14-fold cross validation for 14 musical pieces in evaluation. However, to test model performance for simplicity, we here only provide trainging data and test data for one fold, and all data are already preprocessed in feature level. You can download **train.pkl** and **test.pkl** automatically by executing **train.py** and **test.py** or use **data.py**.
 
+We also provide [`URMP.txt`](https://github.com/hsuankai/Temporally-Guided-Music-to-Body-Movement-Generation/blob/master/data/URMP.txt) which list the musical pieces used in our cross-dataset evaluation
+
 ### Training from scratch
 To reproduce the results, run following commands:
 ```
