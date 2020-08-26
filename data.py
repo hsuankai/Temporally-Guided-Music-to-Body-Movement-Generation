@@ -16,8 +16,8 @@ class Download():
             os.makedirs(self.data_dst)
         if not os.path.exists(self.checkpoint_dst):
             os.makedirs(self.checkpoint_dst)
-        self.train_dst = self.data_dst + 'train.pkl'
-        self.test_dst = self.data_dst + 'test.pkl'
+        self.train_dst = self.data_dst + 'train_mfcc.pkl'
+        self.test_dst = self.data_dst + 'test_mfcc.pkl'
         self.wav_dst = self.data_dst + 'flower.wav'
         self.pretrain_model_dst = self.checkpoint_dst + 'checkpoint082620.pth'
         self.train_url = 'https://drive.google.com/uc?id=1QsghRzGwgzZBQz03MqtWZ0S7X0Y6NivC&export=download'
