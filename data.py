@@ -16,14 +16,14 @@ class Download():
             os.makedirs(self.data_dst)
         if not os.path.exists(self.checkpoint_dst):
             os.makedirs(self.checkpoint_dst)
-        self.train_dst = self.data_dst + 'train.pkl'
-        self.test_dst = self.data_dst + 'test.pkl'
+        self.train_dst = self.data_dst + 'train_mfcc.pkl'
+        self.test_dst = self.data_dst + 'test_mfcc.pkl'
         self.wav_dst = self.data_dst + 'flower.wav'
-        self.pretrain_model_dst = self.checkpoint_dst + 'checkpoint081220.pth'
+        self.pretrain_model_dst = self.checkpoint_dst + 'checkpoint082620.pth'
         self.train_url = 'https://drive.google.com/uc?id=1QsghRzGwgzZBQz03MqtWZ0S7X0Y6NivC&export=download'
         self.test_url = 'https://drive.google.com/u/0/uc?id=1WQksHdEH65xES557nkbsIuNM69vSdtYq&export=download'
         self.wav_url = 'https://drive.google.com/u/0/uc?id=1WwSMkhe5ga0GQdk9OC4atfVaAWkPNd3X&export=download'
-        self.pretrain_model_url = 'https://drive.google.com/u/0/uc?id=1EMSo0M4ITkNK0Hkj72bRO0l0fejPA1jn&export=download'
+        self.pretrain_model_url = 'https://drive.google.com/u/0/uc?id=1vsVxfsep11zpKCuZ45dT9p5tUeLtUNge&export=download'
     
     def train_data(self):
         if not os.path.exists(self.train_dst):
@@ -33,7 +33,7 @@ class Download():
         if not os.path.exists(self.test_dst):
             gdown.download(self.test_url, self.test_dst)
         if not os.path.exists(self.wav_dst):
-            gdown.download(self.wav_url, self.test_wav_dst)
+            gdown.download(self.wav_url, self.wav_dst)
             
     def pretrain_model(self):
         if not os.path.exists(self.pretrain_model_dst):

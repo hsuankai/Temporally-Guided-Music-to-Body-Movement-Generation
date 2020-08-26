@@ -13,8 +13,6 @@ from model.network import MovementNet
 from visualize.animation import plot
 
 
-os.environ["CUDA_DEVICE_ORDER"] = 'PCI_BUS_ID'
-
 def main():
     v_train = ['04'] # Training data only include No.4 violinist
     vid = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10']
@@ -25,7 +23,11 @@ def main():
     parser.add_argument('--plot_path', type=str, default='test.mp4', help='plot skeleton and add audio')
     parser.add_argument('--output_path', type=str, default='test.pkl', help='save skeletal data (only for no.9 violinist)')
     args = parser.parse_args()
-    gpu_ids = [int(i) for i in args.gpu_ids.split(',')]
+    
+    # Device
+    os.environ["CUDA_DEVICE_ORDER"] = 'PCI_BUS_ID'
+    os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu_ids
+    gpu_ids = np.arange(len(args.gpu_ids.split(',')))
     
     # Data
     download_data = Download()
@@ -107,7 +109,7 @@ def main():
                 bowz.append(v_bow_acc[2])
                 bow.append(v_bow_acc[3])
                 cosine.append(v_cosine)
-            torch.cuda.empty_cache()
+        torch.cuda.empty_cache()
     
         avg_pck = (np.mean(pck_01) + np.mean(pck_02))*0.5
         print(p + ' Avg_L1_loss: %f' %np.mean(l1))
