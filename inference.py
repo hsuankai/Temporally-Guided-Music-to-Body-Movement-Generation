@@ -11,8 +11,6 @@ from model.network import MovementNet
 from visualize.animation import plot
 
 
-os.environ["CUDA_DEVICE_ORDER"] = 'PCI_BUS_ID'
-
 def main():
     # Parser
     parser = parse()
@@ -22,9 +20,10 @@ def main():
     args = parser.parse_args()
     
     # Device
-    os.environ["CUDA_DEVICE_ORDER"] = 'PCI_BUS_ID'
-    os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu_ids
-    gpu_ids = [i for i in range(len(args.gpu_ids.split(',')))]
+    if torch.cuda.is_available():
+        os.environ["CUDA_DEVICE_ORDER"] = 'PCI_BUS_ID'
+        os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu_ids
+        gpu_ids = [i for i in range(len(args.gpu_ids.split(',')))]
     
     # Load pretrain model
     download_data = Download()
@@ -46,9 +45,9 @@ def main():
     
     with torch.no_grad():
         print('inference...')
-        X_test = torch.tensor(aud, dtype=torch.float32).cuda('cuda:' + str(gpu_ids[0])).unsqueeze(0)
+        X_test = torch.tensor(aud, dtype=torch.float32).to('cuda:0' if torch.cuda.is_available() else 'cpu').unsqueeze(0)
         lengths = X_test.size(1)
-        lengths = torch.tensor(lengths).cuda('cuda:' + str(gpu_ids[0]))
+        lengths = torch.tensor(lengths).to('cuda:0' if torch.cuda.is_available() else 'cpu')
         lengths = lengths.unsqueeze(0)
         
         full_output = movement_net.forward(X_test, lengths)

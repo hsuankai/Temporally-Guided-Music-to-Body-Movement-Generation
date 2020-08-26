@@ -45,7 +45,7 @@ class audio_skeleton_dataset(Dataset):
         keypoints: skeleton feature, size [N, T, (K*3)]
         seq_len: length of each sequence, size [N] 
     """
-    def __init__(self, root, split, gpu_id='0'):
+    def __init__(self, root, split):
         with open(root, 'rb') as f:
             self.Data = pickle.load(f)
             
@@ -54,16 +54,14 @@ class audio_skeleton_dataset(Dataset):
         self.keypoints = self.data['keypoints']
         self.seq_len = self.data['seq_len']
 
-        self.gpu_id = gpu_id
-        
     def __getitem__(self, index):
         aud = self.aud[index]
         keypoints = self.keypoints[index]
         seq_len = self.seq_len[index]
         
-        aud = torch.tensor(aud, dtype=torch.float32).cuda('cuda:' + self.gpu_id)
-        keypoints = torch.tensor(keypoints, dtype=torch.float32).cuda('cuda:' + self.gpu_id)
-        seq_len = torch.tensor(seq_len).cuda('cuda:' + self.gpu_id)
+        aud = torch.tensor(aud, dtype=torch.float32).to('cuda:0' if torch.cuda.is_available() else 'cpu')
+        keypoints = torch.tensor(keypoints, dtype=torch.float32).to('cuda:0' if torch.cuda.is_available() else 'cpu')
+        seq_len = torch.tensor(seq_len).to('cuda:0' if torch.cuda.is_available() else 'cpu')
         
         return aud, keypoints, seq_len
 

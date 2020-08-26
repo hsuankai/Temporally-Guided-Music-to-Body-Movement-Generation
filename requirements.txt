@@ -1,0 +1,7 @@
+gdown==3.12.2
+librosa==0.6.3
+matplotlib==3.0.3
+moviepy==1.0.0
+scikit-learn==0.20.3
+numpy==1.16.2
+numba==0.43.1

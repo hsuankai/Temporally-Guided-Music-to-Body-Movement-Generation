@@ -23,23 +23,25 @@ def main():
     args = parser.parse_args()
     
     # Device
-    os.environ["CUDA_DEVICE_ORDER"] = 'PCI_BUS_ID'
-    os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu_ids
-    gpu_ids = [i for i in range(len(args.gpu_ids.split(',')))]
+    if torch.cuda.is_available():
+        os.environ["CUDA_DEVICE_ORDER"] = 'PCI_BUS_ID'
+        os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu_ids
+        gpu_ids = [i for i in range(len(args.gpu_ids.split(',')))]
 
     # Data
     download_data = Download()
     download_data.train_data()
-    train_dataset = audio_skeleton_dataset(download_data.train_dst, 'train', gpu_id=str(gpu_ids[0]))
-    val_dataset = audio_skeleton_dataset(download_data.train_dst, 'val', gpu_id=str(gpu_ids[0]))
+    train_dataset = audio_skeleton_dataset(download_data.train_dst, 'train')
+    val_dataset = audio_skeleton_dataset(download_data.train_dst, 'val')
 
     train_loader = DataLoader(train_dataset, batch_size=args.batch, shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=args.batch, shuffle=False)
 
     # Model
     movement_net = MovementNet(args.d_input, args.d_output_body, args.d_output_rh, args.d_model, args.n_block, args.n_unet, args.n_attn, args.n_head, args.max_len, args.dropout,
-                                   args.pre_lnorm, args.attn_type)
-    movement_net = nn.DataParallel(movement_net, device_ids=gpu_ids)
+                                   args.pre_lnorm, args.attn_type).to('cuda:0' if torch.cuda.is_available() else 'cpu')
+    if torch.cuda.is_available():
+        movement_net = nn.DataParallel(movement_net, device_ids=gpu_ids)
     optimizer = Optimizer(
         torch.optim.Adam(movement_net.parameters(), betas=(0.9, 0.98), eps=1e-09),
         1.0,
@@ -66,7 +68,7 @@ def main():
             X_train, lengths = sort_sequences(X_train, seq_len)
             y_train, _ = sort_sequences(y_train, seq_len)
             mask = y_train != 0
-            mask = mask.type('torch.FloatTensor').cuda('cuda:' + str(gpu_ids[0]))
+            mask = mask.type('torch.FloatTensor').to('cuda:0' if torch.cuda.is_available() else 'cpu')
 
             full_output = movement_net.forward(X_train, lengths)
 
@@ -91,7 +93,7 @@ def main():
                 X_val, lengths = sort_sequences(X_val, seq_len)
                 y_val, _ = sort_sequences(y_val, seq_len)
                 mask = y_val != 0
-                mask = mask.type('torch.FloatTensor').cuda('cuda:' + str(gpu_ids[0]))
+                mask = mask.type('torch.FloatTensor').to('cuda:0' if torch.cuda.is_available() else 'cpu')
 
                 full_output = movement_net.forward(X_val, lengths)
 
