@@ -15,15 +15,18 @@ from model.network import MovementNet
 from model.optimizer import Optimizer
 
 
-os.environ["CUDA_DEVICE_ORDER"] = 'PCI_BUS_ID'
 torch.manual_seed(0)
 torch.cuda.manual_seed_all(0)
 
 def main():
     parser = parse()
     args = parser.parse_args()
-    gpu_ids = [int(i) for i in args.gpu_ids.split(',')]
     
+    # Device
+    os.environ["CUDA_DEVICE_ORDER"] = 'PCI_BUS_ID'
+    os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu_ids
+    gpu_ids = [i for i in range(len(args.gpu_ids.split(',')))]
+
     # Data
     download_data = Download()
     download_data.train_data()
