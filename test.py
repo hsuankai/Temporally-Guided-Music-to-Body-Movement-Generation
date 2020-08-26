@@ -40,7 +40,7 @@ def main():
     # Model
     checkpoint = torch.load(args.checkpoint)
     movement_net = MovementNet(args.d_input, args.d_output_body, args.d_output_rh, args.d_model, args.n_block, args.n_unet, args.n_attn, args.n_head, args.max_len, args.dropout,
-                                   args.pre_lnorm, args.attn_type)
+                                   args.pre_lnorm, args.attn_type).to('cuda:0' if torch.cuda.is_available() else 'cpu')
     movement_net = nn.DataParallel(movement_net, device_ids=gpu_ids)
     movement_net.load_state_dict(checkpoint['model_state_dict']['movement_net'])
     movement_net = movement_net.module
