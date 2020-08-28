@@ -14,7 +14,7 @@ from visualize.animation import plot
 def main():
     # Parser
     parser = parse()
-    parser.add_argument('--inference_audio', type=str, default='AuSep_1_vn_02_Sonata.wav', help='the path of input wav file', required=True)
+    parser.add_argument('--inference_audio', type=str, default='inference.wav', help='the path of input wav file', required=True)
     parser.add_argument('--plot_path', type=str, default='inference.mp4', help='plot skeleton and add audio')
     parser.add_argument('--output_path', type=str, default='inference.pkl', help='save skeletal data')
     args = parser.parse_args()
@@ -23,12 +23,11 @@ def main():
     if torch.cuda.is_available():
         os.environ["CUDA_DEVICE_ORDER"] = 'PCI_BUS_ID'
         os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu_ids
-        gpu_ids = [i for i in range(len(args.gpu_ids.split(',')))]
     
     # Load pretrain model
     download_data = Download()
     download_data.pretrain_model()
-    checkpoint = torch.load(download_data.pretrain_model_dst)
+    checkpoint = torch.load(download_data.pretrain_model_dst, map_location='cuda:0' if torch.cuda.is_available() else 'cpu')
     keypoints_mean, keypoints_std = checkpoint['keypoints_mean'], checkpoint['keypoints_std']
     aud_mean, aud_std = checkpoint['aud_mean'], checkpoint['aud_std']
     
@@ -38,9 +37,7 @@ def main():
     # Model
     movement_net = MovementNet(args.d_input, args.d_output_body, args.d_output_rh, args.d_model, args.n_block, args.n_unet, args.n_attn, args.n_head, args.max_len, args.dropout,
                                    args.pre_lnorm, args.attn_type).to('cuda:0' if torch.cuda.is_available() else 'cpu')
-    movement_net = nn.DataParallel(movement_net, device_ids=gpu_ids)
     movement_net.load_state_dict(checkpoint['model_state_dict']['movement_net'])
-    movement_net = movement_net.module
     movement_net.eval()
     
     with torch.no_grad():

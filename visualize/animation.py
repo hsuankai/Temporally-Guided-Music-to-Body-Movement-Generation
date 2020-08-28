@@ -1,3 +1,4 @@
+import os
 import matplotlib
 matplotlib.use('Agg')
 
@@ -22,6 +23,7 @@ def plot(audio_path, plot_path, prediction, sample_time=None, fps=30):
     videoclip = VideoFileClip('temp.mp4')
     videoclip.audio = audioclip
     videoclip.write_videofile(plot_path, fps=fps)
+    os.remove('temp.mp4')
 
 def render_animation(fps, output, azim, prediction, ground_truth=None): 
     bitrate = 3000

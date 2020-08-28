@@ -40,7 +40,7 @@ def main():
     # Model
     movement_net = MovementNet(args.d_input, args.d_output_body, args.d_output_rh, args.d_model, args.n_block, args.n_unet, args.n_attn, args.n_head, args.max_len, args.dropout,
                                    args.pre_lnorm, args.attn_type).to('cuda:0' if torch.cuda.is_available() else 'cpu')
-    if torch.cuda.is_available():
+    if torch.cuda.is_available() and len(args.gpu_ids.split(',')) > 1:
         movement_net = nn.DataParallel(movement_net, device_ids=gpu_ids)
     optimizer = Optimizer(
         torch.optim.Adam(movement_net.parameters(), betas=(0.9, 0.98), eps=1e-09),
@@ -112,8 +112,12 @@ def main():
                     counter = 0
                     if not os.path.exists('checkpoint'):
                         os.makedirs('checkpoint')
+                    if torch.cuda.is_available() and len(args.gpu_ids.split(',')) > 1:
+                        state_dict = movement_net.module.state_dict()
+                    else:
+                        state_dict = movement_net.state_dict()
                     torch.save({'epoch' : e+1,
-                                'model_state_dict': {'movement_net': movement_net.state_dict()},
+                                'model_state_dict': {'movement_net': state_dict},
                                 'optimizer_state_dict': optimizer.state_dict(),
                                 'loss': min_val_loss}, args.checkpoint)
                 else:
