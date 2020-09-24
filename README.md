@@ -1,7 +1,7 @@
 # Temporally-Guided-Music-to-Body-Movement-Generation
 This is the pytorch implementation of music-to-body-movement model described in the paper:  
 
->[Hsuan-Kai Kao](https://github.com/hsuankai) and [Li Su](https://www.iis.sinica.edu.tw/pages/lisu/index_en.html). [Temporally Guided Music-to-Body-Movement Generation](https://arxiv.org/pdf/2009.08015.pdf), ACM Multimedia 2020  
+>[Hsuan-Kai Kao](https://hsuankai.wixsite.com/website) and [Li Su](https://www.iis.sinica.edu.tw/pages/lisu/index_en.html). [Temporally Guided Music-to-Body-Movement Generation](https://arxiv.org/pdf/2009.08015.pdf), ACM Multimedia 2020  
 This project is part of the [Automatic Music Concert Animation (AMCA)](https://sites.google.com/view/mctl/research/automatic-music-concert-animation) project of the Institute of Information Science, Academia Sinica, Taiwan.
 
 ![image](https://github.com/hsuankai/Temporally-Guided-Music-to-Body-Movement-Generation/blob/master/demo_animation.gif)
