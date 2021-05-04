@@ -86,7 +86,7 @@ class Unet_block(nn.Module):
                 skip.append(x)
         
         # Self-attention
-        if self.n_attn > 1:
+        if self.n_attn >= 1:
             x = x.transpose(1,2)
             x_pos = lengths_to_tensor(lengths, max_len=self.max_len)[:, :x.size(1)] # lengths to matrix
             if return_attns:
