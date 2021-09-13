@@ -14,7 +14,7 @@ class HandEncoder(nn.Module):
                  pre_lnorm, attn_type):
         super(HandEncoder, self).__init__()
         self.linear = Linear(d_input, d_model)
-        self.unet = nn.ModuleList([Unet_block(d_model, n_unet, n_attn, n_head, max_len, dropout, pre_lnorm, attn_type)] * n_block)
+        self.unet = nn.ModuleList([Unet_block(d_model, n_unet, n_attn, n_head, max_len, dropout, pre_lnorm, attn_type) for _ in range(n_block)])
         self.ffn = FFN_linear(d_model, dropout)
              
     def forward(self, enc_input, lengths, return_attns=False):
