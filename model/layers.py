@@ -21,7 +21,7 @@ class AttentionNetwork(nn.Module):
             self.alpha = nn.Parameter(torch.ones(1))
             self.pos_dropout = nn.Dropout(0.1)
             
-        self.slf_attn = [Self_attention(d_model, n_head, max_len, dropout, pre_lnorm, attn_type)] * n_attn
+        self.slf_attn = [Self_attention(d_model, n_head, max_len, dropout, pre_lnorm, attn_type) for _ in range(n_attn)]
         self.slf_attn = nn.Sequential(*self.slf_attn)
         
         # Postionwise network
@@ -72,8 +72,8 @@ class Unet_block(nn.Module):
         self.max_len = max_len
         self.n_attn = n_attn
         
-        self.down = nn.ModuleList([Down(d_model, d_model, residual=False)] * n_unet)
-        self.up = nn.ModuleList([Up(d_model*2, d_model, residual=False)] * n_unet)    
+        self.down = nn.ModuleList([Down(d_model, d_model, residual=False) for _ in range(n_unet)])
+        self.up = nn.ModuleList([Up(d_model*2, d_model, residual=False) for _ in range(n_unet)])    
         self.attn_net = AttentionNetwork(d_model, n_attn, n_head, max_len, dropout, pre_lnorm, attn_type)
         
     def forward(self, x, lengths, return_attns):
