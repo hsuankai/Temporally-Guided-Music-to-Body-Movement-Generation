@@ -25,7 +25,7 @@ class AttentionNetwork(nn.Module):
         self.slf_attn = nn.Sequential(*self.slf_attn)
         
         # Postionwise network
-        self.pos_ffn = [FFN_linear(d_model, dropout, pre_lnorm)] * n_attn
+        self.pos_ffn = [FFN_linear(d_model, dropout, pre_lnorm) for _ in range(n_attn)]
         self.pos_ffn = nn.Sequential(*self.pos_ffn)
         
     def forward(self, x, x_pos, return_attns=False):    
