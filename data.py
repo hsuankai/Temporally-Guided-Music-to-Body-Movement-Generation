@@ -20,7 +20,7 @@ class Download():
         self.test_dst = self.data_dst + 'test.pkl'
         self.wav_dst = self.data_dst + 'flower.wav'
         self.pretrain_model_dst = self.checkpoint_dst + 'checkpoint082820.pth'
-        self.train_url = 'https://drive.google.com/uc?id=1QsghRzGwgzZBQz03MqtWZ0S7X0Y6NivC&export=download'
+        self.train_url = 'https://drive.google.com/u/0/uc?id=13-cpGbKCyvNWVLH-bqob3YIdnWNepx2F&export=download'
         self.test_url = 'https://drive.google.com/u/0/uc?id=1WQksHdEH65xES557nkbsIuNM69vSdtYq&export=download'
         self.wav_url = 'https://drive.google.com/u/0/uc?id=1WwSMkhe5ga0GQdk9OC4atfVaAWkPNd3X&export=download'
         self.pretrain_model_url = 'https://drive.google.com/u/0/uc?id=1uFrYoJJ5pGosN0vl87F0_cS9fkoWLGB1&export=download'
